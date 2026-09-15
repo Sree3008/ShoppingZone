@@ -1,20 +1,44 @@
-# STS / Eclipse
+# Eclipse
 .metadata/
-.classpath
-.project
 .settings/
+.project
+.classpath
+.factorypath
+bin/
+*.launch
 
-# Maven
+# Maven & Build output
 target/
-*/target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
 
-# IDE
+# IntelliJ IDEA
 .idea/
 *.iml
+*.iws
+*.ipr
+out/
+
+# VS Code
+.vscode/
+
+# OS and System Files
+.DS_Store
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.tmp
+*.bak
+*.swp
+*~.nib
 
 # Logs
 *.log
-
-# OS
-.DS_Store
-Thumbs.db
+logs/
+log/
