@@ -1,6 +1,5 @@
 package com.eshoppingzone.order.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -46,7 +45,6 @@ public class Order {
     private String shippingCountry;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JsonManagedReference
     private List<OrderItem> items = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)

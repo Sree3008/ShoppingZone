@@ -1,6 +1,5 @@
 package com.eshoppingzone.cart.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -15,7 +14,6 @@ public class CartItem {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cart_id", nullable = false)
-    @JsonBackReference
     private Cart cart;
 
     @Column(nullable = false)

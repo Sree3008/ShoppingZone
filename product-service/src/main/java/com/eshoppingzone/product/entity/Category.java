@@ -26,9 +26,16 @@ public class Category {
     public Category() {
     }
 
+    public Category(Long id, String name, String description, boolean active) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.active = active;
+    }
+
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {

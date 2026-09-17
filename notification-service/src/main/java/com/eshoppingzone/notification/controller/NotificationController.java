@@ -1,84 +1,72 @@
 package com.eshoppingzone.notification.controller;
 
-import com.eshoppingzone.notification.entity.Notification;
-import com.eshoppingzone.notification.repository.NotificationRepository;
-import org.springframework.http.HttpStatus;
+import com.eshoppingzone.notification.dto.ApiResponse;
+import com.eshoppingzone.notification.dto.NotificationDto;
+import com.eshoppingzone.notification.security.UserPrincipal;
+import com.eshoppingzone.notification.service.NotificationService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
-@RequestMapping("/notifications")
+@RequestMapping("/api/v1/notifications")
+@Tag(name = "Notification Management", description = "APIs for viewing user notifications and updating read status")
 public class NotificationController {
 
-    private final NotificationRepository notificationRepository;
+    private final NotificationService notificationService;
 
-    public NotificationController(NotificationRepository notificationRepository) {
-        this.notificationRepository = notificationRepository;
+    public NotificationController(NotificationService notificationService) {
+        this.notificationService = notificationService;
     }
 
-    @PostMapping
-    public ResponseEntity<Notification> createNotification(@RequestBody Notification notification) {
-        Notification saved = notificationRepository.save(notification);
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
-    }
-
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Notification>> getNotificationsForUser(
-            @PathVariable Long userId,
-            @RequestParam(required = false) String role) {
-
-        if (role != null && !role.trim().isEmpty()) {
-            return ResponseEntity.ok(
-                    notificationRepository.findByRecipientUserIdOrRecipientRoleOrderByCreatedAtDesc(userId, role)
-            );
+    private Long getUserId(Authentication authentication) {
+        if (authentication != null && authentication.getPrincipal() instanceof UserPrincipal) {
+            return ((UserPrincipal) authentication.getPrincipal()).getUserId();
         }
-        return ResponseEntity.ok(
-                notificationRepository.findByRecipientUserIdOrderByCreatedAtDesc(userId)
-        );
+        return null;
     }
 
-    @GetMapping("/role/{role}")
-    public ResponseEntity<List<Notification>> getNotificationsForRole(@PathVariable String role) {
-        return ResponseEntity.ok(
-                notificationRepository.findByRecipientRoleOrderByCreatedAtDesc(role)
-        );
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Notification>> getAllNotifications() {
-        return ResponseEntity.ok(
-                notificationRepository.findAllByOrderByCreatedAtDesc()
-        );
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<Notification> getNotificationById(@PathVariable Long id) {
-        return notificationRepository.findById(id)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    @GetMapping("/my")
+    @Operation(summary = "Get My Notifications", description = "Retrieve list of all notifications for the current authenticated user")
+    public ResponseEntity<ApiResponse<List<NotificationDto>>> getMyNotifications(Authentication authentication,
+                                                                                @RequestParam(required = false, defaultValue = "false") boolean unreadOnly) {
+        Long userId = getUserId(authentication);
+        List<NotificationDto> notifications;
+        if (unreadOnly) {
+            notifications = notificationService.getMyUnreadNotifications(userId);
+        } else {
+            notifications = notificationService.getMyNotifications(userId);
+        }
+        return ResponseEntity.ok(ApiResponse.success("Notifications retrieved successfully", notifications));
     }
 
     @PutMapping("/{id}/read")
-    public ResponseEntity<Void> markAsRead(@PathVariable Long id) {
-        Optional<Notification> optionalNotification = notificationRepository.findById(id);
-        if (optionalNotification.isPresent()) {
-            Notification notification = optionalNotification.get();
-            notification.setRead(true);
-            notificationRepository.save(notification);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    @Operation(summary = "Mark Notification as Read", description = "Mark a single notification as read")
+    public ResponseEntity<ApiResponse<NotificationDto>> markAsRead(Authentication authentication,
+                                                                   @PathVariable Long id) {
+        Long userId = getUserId(authentication);
+        NotificationDto notification = notificationService.markAsRead(id, userId);
+        return ResponseEntity.ok(ApiResponse.success("Notification marked as read", notification));
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteNotification(@PathVariable Long id) {
-        if (notificationRepository.existsById(id)) {
-            notificationRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+    @PutMapping("/read-all")
+    @Operation(summary = "Mark All as Read", description = "Mark all unread notifications as read for current user")
+    public ResponseEntity<ApiResponse<Void>> markAllAsRead(Authentication authentication) {
+        Long userId = getUserId(authentication);
+        notificationService.markAllAsRead(userId);
+        return ResponseEntity.ok(ApiResponse.success("All notifications marked as read", null));
+    }
+
+    @GetMapping("/user/{userId}")
+    @Operation(summary = "Get User Notifications (Admin)", description = "Admin views notification log for any specific user")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<NotificationDto>>> getUserNotifications(@PathVariable Long userId) {
+        List<NotificationDto> notifications = notificationService.getUserNotifications(userId);
+        return ResponseEntity.ok(ApiResponse.success("User notifications retrieved successfully", notifications));
     }
 }

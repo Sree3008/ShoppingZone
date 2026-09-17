@@ -11,45 +11,69 @@ public class Delivery {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    @Column(name = "order_id", nullable = false, unique = true)
     private Long orderId;
 
-    @Column(nullable = false, length = 100)
-    private String recipientName;
+    @Column(name = "customer_id", nullable = false)
+    private Long customerId;
 
-    @Column(nullable = false, length = 255)
+    @Column(name = "delivery_agent_id")
+    private Long deliveryAgentId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private DeliveryStatus status;
+
+    @Column(name = "pickup_address", length = 500)
+    private String pickupAddress;
+
+    @Column(name = "delivery_address", nullable = false, length = 500)
     private String deliveryAddress;
 
-    @Column(nullable = false, length = 30)
-    private String status;
+    @Column(name = "customer_phone", length = 20)
+    private String customerPhone;
 
-    @Column(length = 50)
-    private String trackingNumber;
+    @Column(name = "assigned_at")
+    private LocalDateTime assignedAt;
 
-    @Column(nullable = false)
-    private LocalDateTime estimatedDeliveryDate;
+    @Column(name = "picked_up_at")
+    private LocalDateTime pickedUpAt;
 
-    @Column(nullable = false, updatable = false)
+    @Column(name = "delivered_at")
+    private LocalDateTime deliveredAt;
+
+    @Column(name = "failure_reason", length = 500)
+    private String failureReason;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    @Column(nullable = false)
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     public Delivery() {
     }
 
+    public Delivery(Long orderId, Long customerId, String deliveryAddress, String customerPhone) {
+        this.orderId = orderId;
+        this.customerId = customerId;
+        this.deliveryAddress = deliveryAddress;
+        this.customerPhone = customerPhone;
+        this.status = DeliveryStatus.PENDING;
+    }
+
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-        if (status == null) {
-            status = "PENDING";
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = DeliveryStatus.PENDING;
         }
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -68,12 +92,36 @@ public class Delivery {
         this.orderId = orderId;
     }
 
-    public String getRecipientName() {
-        return recipientName;
+    public Long getCustomerId() {
+        return customerId;
     }
 
-    public void setRecipientName(String recipientName) {
-        this.recipientName = recipientName;
+    public void setCustomerId(Long customerId) {
+        this.customerId = customerId;
+    }
+
+    public Long getDeliveryAgentId() {
+        return deliveryAgentId;
+    }
+
+    public void setDeliveryAgentId(Long deliveryAgentId) {
+        this.deliveryAgentId = deliveryAgentId;
+    }
+
+    public DeliveryStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(DeliveryStatus status) {
+        this.status = status;
+    }
+
+    public String getPickupAddress() {
+        return pickupAddress;
+    }
+
+    public void setPickupAddress(String pickupAddress) {
+        this.pickupAddress = pickupAddress;
     }
 
     public String getDeliveryAddress() {
@@ -84,28 +132,44 @@ public class Delivery {
         this.deliveryAddress = deliveryAddress;
     }
 
-    public String getStatus() {
-        return status;
+    public String getCustomerPhone() {
+        return customerPhone;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setCustomerPhone(String customerPhone) {
+        this.customerPhone = customerPhone;
     }
 
-    public String getTrackingNumber() {
-        return trackingNumber;
+    public LocalDateTime getAssignedAt() {
+        return assignedAt;
     }
 
-    public void setTrackingNumber(String trackingNumber) {
-        this.trackingNumber = trackingNumber;
+    public void setAssignedAt(LocalDateTime assignedAt) {
+        this.assignedAt = assignedAt;
     }
 
-    public LocalDateTime getEstimatedDeliveryDate() {
-        return estimatedDeliveryDate;
+    public LocalDateTime getPickedUpAt() {
+        return pickedUpAt;
     }
 
-    public void setEstimatedDeliveryDate(LocalDateTime estimatedDeliveryDate) {
-        this.estimatedDeliveryDate = estimatedDeliveryDate;
+    public void setPickedUpAt(LocalDateTime pickedUpAt) {
+        this.pickedUpAt = pickedUpAt;
+    }
+
+    public LocalDateTime getDeliveredAt() {
+        return deliveredAt;
+    }
+
+    public void setDeliveredAt(LocalDateTime deliveredAt) {
+        this.deliveredAt = deliveredAt;
+    }
+
+    public String getFailureReason() {
+        return failureReason;
+    }
+
+    public void setFailureReason(String failureReason) {
+        this.failureReason = failureReason;
     }
 
     public LocalDateTime getCreatedAt() {

@@ -2,7 +2,7 @@ package com.eshoppingzone.product.entity;
 
 public enum ProductStatus {
     PENDING_APPROVAL,
-    APPROVED,
+    ACTIVE,
     REJECTED,
-    OUT_OF_STOCK
+    DEACTIVATED
 }

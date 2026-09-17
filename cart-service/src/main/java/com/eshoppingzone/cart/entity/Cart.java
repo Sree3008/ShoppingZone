@@ -1,6 +1,5 @@
 package com.eshoppingzone.cart.entity;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -18,7 +17,6 @@ public class Cart {
     private Long customerId;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
-    @JsonManagedReference
     private List<CartItem> items = new ArrayList<>();
 
     @Column(nullable = false, updatable = false)

@@ -1,7 +1,7 @@
 package com.eshoppingzone.notification.entity;
 
-import java.time.LocalDateTime;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "notifications")
@@ -11,40 +11,38 @@ public class Notification {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long recipientUserId;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    private String recipientRole;
-
-    @Column(nullable = false)
+    @Column(name = "title", nullable = false, length = 200)
     private String title;
 
-    @Column(nullable = false, length = 1000)
+    @Column(name = "message", nullable = false, length = 1000)
     private String message;
 
-    private Long orderId;
+    @Column(name = "type", nullable = false, length = 50)
+    private String type;
 
-    private boolean isRead = false;
+    @Column(name = "is_read", nullable = false)
+    private boolean isRead;
 
+    @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     public Notification() {
     }
 
-    public Notification(Long recipientUserId, String recipientRole, String title, String message, Long orderId) {
-        this.recipientUserId = recipientUserId;
-        this.recipientRole = recipientRole;
+    public Notification(Long userId, String title, String message, String type) {
+        this.userId = userId;
         this.title = title;
         this.message = message;
-        this.orderId = orderId;
+        this.type = type;
         this.isRead = false;
-        this.createdAt = LocalDateTime.now();
     }
 
     @PrePersist
     protected void onCreate() {
-        if (this.createdAt == null) {
-            this.createdAt = LocalDateTime.now();
-        }
+        this.createdAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -55,20 +53,12 @@ public class Notification {
         this.id = id;
     }
 
-    public Long getRecipientUserId() {
-        return recipientUserId;
+    public Long getUserId() {
+        return userId;
     }
 
-    public void setRecipientUserId(Long recipientUserId) {
-        this.recipientUserId = recipientUserId;
-    }
-
-    public String getRecipientRole() {
-        return recipientRole;
-    }
-
-    public void setRecipientRole(String recipientRole) {
-        this.recipientRole = recipientRole;
+    public void setUserId(Long userId) {
+        this.userId = userId;
     }
 
     public String getTitle() {
@@ -87,20 +77,20 @@ public class Notification {
         this.message = message;
     }
 
-    public Long getOrderId() {
-        return orderId;
+    public String getType() {
+        return type;
     }
 
-    public void setOrderId(Long orderId) {
-        this.orderId = orderId;
+    public void setType(String type) {
+        this.type = type;
     }
 
     public boolean isRead() {
         return isRead;
     }
 
-    public void setRead(boolean isRead) {
-        this.isRead = isRead;
+    public void setRead(boolean read) {
+        isRead = read;
     }
 
     public LocalDateTime getCreatedAt() {

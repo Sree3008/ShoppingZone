@@ -9,8 +9,6 @@ public class RefundRequest {
     @NotNull(message = "Order ID is required")
     private Long orderId;
 
-    private Long customerId;
-
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
     private BigDecimal amount;
@@ -20,9 +18,8 @@ public class RefundRequest {
     public RefundRequest() {
     }
 
-    public RefundRequest(Long orderId, Long customerId, BigDecimal amount, String reason) {
+    public RefundRequest(Long orderId, BigDecimal amount, String reason) {
         this.orderId = orderId;
-        this.customerId = customerId;
         this.amount = amount;
         this.reason = reason;
     }
@@ -33,14 +30,6 @@ public class RefundRequest {
 
     public void setOrderId(Long orderId) {
         this.orderId = orderId;
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
     }
 
     public BigDecimal getAmount() {

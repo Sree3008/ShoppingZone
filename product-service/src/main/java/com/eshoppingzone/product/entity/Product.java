@@ -43,19 +43,29 @@ public class Product {
     public Product() {
     }
 
+    public Product(Long id, Long merchantId, String name, String description, String category, BigDecimal price, String imageUrl, ProductStatus status) {
+        this.id = id;
+        this.merchantId = merchantId;
+        this.name = name;
+        this.description = description;
+        this.category = category;
+        this.price = price;
+        this.imageUrl = imageUrl;
+        this.status = status;
+    }
+
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-
-        if (status == null) {
-            status = ProductStatus.PENDING_APPROVAL;
+        this.createdAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
+        if (this.status == null) {
+            this.status = ProductStatus.PENDING_APPROVAL;
         }
     }
 
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        this.updatedAt = LocalDateTime.now();
     }
 
     public Long getId() {
