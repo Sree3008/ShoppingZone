@@ -11,6 +11,9 @@
     <name>EShoppingZone Parent</name>
     <description>EShoppingZone E-Commerce Microservices Platform</description>
 
+
+
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -28,6 +31,8 @@
         <jjwt.version>0.12.6</jjwt.version>
         <testcontainers.version>1.20.4</testcontainers.version>
     </properties>
+
+
 
     <modules>
         <module>config-server</module>
