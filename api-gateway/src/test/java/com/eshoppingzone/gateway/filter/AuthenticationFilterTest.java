@@ -1,0 +1,152 @@
+package com.eshoppingzone.gateway.filter;
+
+import com.eshoppingzone.gateway.util.JwtUtil;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
+import org.springframework.mock.web.server.MockServerWebExchange;
+import reactor.core.publisher.Mono;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class AuthenticationFilterTest {
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private GatewayFilterChain chain;
+
+    private AuthenticationFilter filter;
+
+    @BeforeEach
+    void setUp() {
+        filter = new AuthenticationFilter(jwtUtil);
+    }
+
+    @Test
+    @DisplayName("Public endpoints (e.g. /api/v1/auth/login) should bypass authentication")
+    void testPublicEndpointBypassesAuth() {
+        when(chain.filter(any())).thenReturn(Mono.empty());
+
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/auth/login").build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, times(1)).filter(any(org.springframework.web.server.ServerWebExchange.class));
+        assertNotEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Refresh endpoint (/api/v1/auth/refresh) should bypass gateway auth filter")
+    void testRefreshEndpointBypassesAuth() {
+        when(chain.filter(any())).thenReturn(Mono.empty());
+
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/auth/refresh").build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, times(1)).filter(any(org.springframework.web.server.ServerWebExchange.class));
+        assertNotEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Logout endpoint (/api/v1/auth/logout) should bypass gateway auth filter")
+    void testLogoutEndpointBypassesAuth() {
+        when(chain.filter(any())).thenReturn(Mono.empty());
+
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/auth/logout").build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, times(1)).filter(any(org.springframework.web.server.ServerWebExchange.class));
+        assertNotEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Protected endpoints without token should return HTTP 401 Unauthorized")
+    void testProtectedEndpointWithoutTokenReturns401() {
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/orders/1").build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, never()).filter(any());
+        assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Protected endpoints with valid access token should propagate user headers")
+    void testValidTokenPropagatesHeaders() {
+        String token = "valid.jwt.access.token";
+        when(jwtUtil.isTokenValid(token)).thenReturn(true);
+        when(jwtUtil.extractUserId(token)).thenReturn(42L);
+        when(jwtUtil.extractRole(token)).thenReturn("ROLE_CUSTOMER");
+        when(jwtUtil.extractUsername(token)).thenReturn("siva");
+        when(jwtUtil.extractEmail(token)).thenReturn("siva@example.com");
+        when(chain.filter(any())).thenReturn(Mono.empty());
+
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/orders/1")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, times(1)).filter(any());
+        assertNotEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Protected endpoints with refresh token should be rejected with HTTP 401 Unauthorized")
+    void testProtectedEndpointWithRefreshTokenReturns401() {
+        String token = "valid.jwt.refresh.token";
+        when(jwtUtil.isTokenValid(token)).thenReturn(false);
+        when(jwtUtil.getTokenType(token)).thenReturn("REFRESH");
+
+        MockServerHttpRequest request = MockServerHttpRequest.get("/api/v1/orders/1")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + token)
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, never()).filter(any());
+        assertEquals(HttpStatus.UNAUTHORIZED, exchange.getResponse().getStatusCode());
+    }
+
+    @Test
+    @DisplayName("Spoofed client identity headers should be stripped on public requests")
+    void testClientSuppliedSpoofedHeadersAreStripped() {
+        when(chain.filter(any())).thenAnswer(invocation -> {
+            org.springframework.web.server.ServerWebExchange ex = invocation.getArgument(0);
+            org.junit.jupiter.api.Assertions.assertFalse(ex.getRequest().getHeaders().containsKey("X-User-Id"));
+            org.junit.jupiter.api.Assertions.assertFalse(ex.getRequest().getHeaders().containsKey("X-User-Role"));
+            return Mono.empty();
+        });
+
+        MockServerHttpRequest request = MockServerHttpRequest.post("/api/v1/auth/login")
+                .header("X-User-Id", "1")
+                .header("X-User-Role", "ADMIN")
+                .build();
+        MockServerWebExchange exchange = MockServerWebExchange.from(request);
+
+        filter.filter(exchange, chain).block();
+
+        verify(chain, times(1)).filter(any());
+    }
+}
